@@ -1,0 +1,44 @@
+package pdf;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.*;
+public class GeraPDFExcel {
+    public static void main(String[] args) {
+        String caminhoExcel = "plan.xlsx";
+        String caminhoPdf = "arq.pdf";
+        try {
+            gerarPdfExcel(caminhoExcel, caminhoPdf);
+            System.out.println("PDF gerado com sucesso!");} catch (Exception e) {
+            e.printStackTrace();}}
+    public static void gerarPdfExcel(String caminhoExcel, String caminhoPdf) throws Exception {
+        FileInputStream fis = new FileInputStream(new File(caminhoExcel));
+        Workbook workbook = new XSSFWorkbook(fis);
+        Sheet sheet = workbook.getSheetAt(0);
+        Document documento = new Document();
+        PdfWriter.getInstance(documento, new FileOutputStream(caminhoPdf));
+        documento.open();
+        int numeroColunas = sheet.getRow(0).getPhysicalNumberOfCells();
+        PdfPTable tabelaPdf = new PdfPTable(numeroColunas);
+        for (Row row : sheet) {
+            for (Cell cell : row) {
+                PdfPCell celulaPdf = new PdfPCell(new Phrase(getValorCelula(cell)));
+                tabelaPdf.addCell(celulaPdf);}}
+        documento.add(new Paragraph("Dados:"));
+        documento.add(tabelaPdf);
+        documento.close();
+        workbook.close();
+        fis.close();}
+    private static String getValorCelula(Cell cell) {
+        switch (cell.getCellType()) {
+            case STRING: return cell.getStringCellValue();
+            case NUMERIC: return String.valueOf((int) cell.getNumericCellValue());
+            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA: return cell.getCellFormula();
+            default: return "";
+        }
+    }
+}
